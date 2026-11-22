@@ -343,7 +343,7 @@ html:not(.on) #page{visibility:hidden}
 @keyframes stkIn{0%{opacity:0;filter:blur(6px) drop-shadow(0 8px 10px rgba(70,50,20,.28));transform:translate(var(--fx,0),22px) rotate(calc(var(--rot,0deg)*3)) scale(.9)}100%{opacity:1;filter:blur(0) drop-shadow(0 8px 10px rgba(70,50,20,.28));transform:translate(0,0) rotate(var(--rot,0deg)) scale(1)}}
 @keyframes stkFloat{0%,100%{transform:translateY(0) rotate(var(--rot,0deg))}50%{transform:translateY(-6px) rotate(calc(var(--rot,0deg) + .8deg))}}
 .xc .dn{position:relative;display:flex;justify-content:center;margin:16px auto 12px}
-.xc .dn .stk{width:min(64%,220px);height:auto;--rot:-3deg;position:relative;left:7px}
+.xc .dn .stk{width:min(64%,220px);height:auto;--rot:-3deg;position:relative;left:16px}
 .xc.in .dn .stk{animation:stkIn 1.5s cubic-bezier(.22,1,.36,1) .5s forwards,stkFloat 7s ease-in-out 2.1s infinite}
 .fin{position:relative;display:flex;justify-content:center;align-items:flex-end;gap:16px;padding:6px 0 64px;direction:ltr}
 .fin .stk{width:min(40vw,170px)}
