@@ -2,8 +2,6 @@
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>try{if("scrollRestoration" in history)history.scrollRestoration="manual"}catch(e){}</script>
-    <link rel="icon" type="image/png" href="engagement-icon.png">
-
 <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet">
 <title>مروان ونرمين — دعوة زفاف</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -505,6 +503,7 @@ html:not(.on) #page{visibility:hidden}
   </div>
   <label class="rl" for="rsvpMsg">رسالة للعروسين</label>
   <textarea class="ri rt" id="rsvpMsg" name="message" placeholder="اكتب كلمة طيبة (اختياري)" maxlength="500" rows="4"></textarea>
+  <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none">
   <p class="re" id="rsvpErr" role="alert" hidden></p>
   <button class="rb" id="rsvpSend" type="submit"><span>إرسال</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 2.8 5 6.2 5c2 0 3.3 1.1 3.8 2.1C10.5 6.1 11.8 5 13.8 5c3.4 0 5.2 3.6 3.8 6.8C19.5 16.4 12 21 12 21z" fill="currentColor" opacity=".55"/></svg></button>
   <p class="ro" id="rsvpOk" role="status" hidden></p>
@@ -699,27 +698,41 @@ tick();setInterval(tick,1000);
 <script>
 (function(){
 /* ===== تأكيد الحضور =====
-   لربطه بجوجل شيت: ضع رابط Apps Script (Web App) هنا. لو فاضي، الرسالة بتظهر للضيف بس من غير إرسال. */
-var SHEET_URL='';
+   لربطه بجوجل شيت: الصق رابط Apps Script (Web App) بين العلامتين هنا. لو فاضي، الرسالة بتظهر للضيف بس من غير إرسال. */
+var SHEET_URL='https://script.google.com/macros/s/AKfycbykloKnTU-M1LxJKZqIQNjMywADm_FOXlGOLz3JMAVWJjAQskqd5f3kivqOEDQPRi8Mag/exec';
 var f=document.getElementById('rsvpForm');
-if(f){f.addEventListener('submit',function(e){
- e.preventDefault();
- var nm=f.elements.name.value.trim(),at=f.elements.attendance.value,ms=f.elements.message.value.trim();
- var er=document.getElementById('rsvpErr'),ok=document.getElementById('rsvpOk'),bt=document.getElementById('rsvpSend');
- if(!nm){er.textContent='من فضلك اكتب اسمك';er.hidden=false;f.elements.name.focus();return}
- if(!at){er.textContent='من فضلك اختر: هل ستحضر؟';er.hidden=false;return}
- er.hidden=true;bt.disabled=true;
- var done=function(){
-  var yes=at.indexOf('سأحضر')===0;
-  ok.textContent=yes?'شكرًا يا '+nm+'، تم تأكيد حضورك. ننتظرك بإذن الله ♡':'شكرًا يا '+nm+'، وصلنا اعتذارك. سنفتقدك وندعو لك بالخير ♡';
-  ok.hidden=false;bt.hidden=true;
-  Array.prototype.forEach.call(f.querySelectorAll('input,textarea'),function(x){x.disabled=true});
- };
- if(!SHEET_URL){done();return}
- var body=new URLSearchParams({name:nm,attendance:at,message:ms,time:new Date().toISOString()});
- fetch(SHEET_URL,{method:'POST',mode:'no-cors',body:body}).then(done,function(){
-  er.textContent='حصلت مشكلة في الإرسال، حاول مرة أخرى';er.hidden=false;bt.disabled=false});
-})}
+if(f){
+ var sending=false;
+ f.addEventListener('submit',function(e){
+  e.preventDefault();
+  if(sending)return;
+  var er=document.getElementById('rsvpErr'),ok=document.getElementById('rsvpOk'),bt=document.getElementById('rsvpSend');
+  var nm=(f.elements['name'].value||'').replace(/\s+/g,' ').trim(),
+      at=f.elements['attendance'].value||'',
+      ms=(f.elements['message'].value||'').trim(),
+      hp=f.elements['website']?f.elements['website'].value:'';
+  if(!nm){er.textContent='من فضلك اكتب اسمك';er.hidden=false;f.elements['name'].focus();return}
+  if(!at){er.textContent='من فضلك اختر: هل ستحضر؟';er.hidden=false;return}
+  er.hidden=true;sending=true;bt.disabled=true;
+  var done=function(){
+   var yes=at.indexOf('سأحضر')===0;
+   ok.textContent=yes?'شكرًا يا '+nm+'، تم تأكيد حضورك. ننتظرك بإذن الله ♡':'شكرًا يا '+nm+'، وصلنا اعتذارك. سنفتقدك وندعو لك بالخير ♡';
+   ok.hidden=false;bt.hidden=true;
+   Array.prototype.forEach.call(f.querySelectorAll('input,textarea'),function(x){x.disabled=true});
+  };
+  var fail=function(){
+   sending=false;bt.disabled=false;
+   er.textContent='حصلت مشكلة في الإرسال، تأكد من الإنترنت وحاول مرة أخرى';er.hidden=false;
+  };
+  if(hp){done();return}
+  if(!SHEET_URL){if(window.console)console.warn('RSVP: SHEET_URL is empty, nothing was sent');done();return}
+  var body=new URLSearchParams({name:nm,attendance:at,message:ms});
+  var ctl=('AbortController' in window)?new AbortController():null;
+  var tm=setTimeout(function(){if(ctl)ctl.abort()},20000);
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',body:body,signal:ctl?ctl.signal:undefined}).then(
+   function(){clearTimeout(tm);done()},
+   function(){clearTimeout(tm);fail()});
+ })}
 })();
 </script>
 <script>
